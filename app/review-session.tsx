@@ -1,4 +1,6 @@
-import { useLocalSearchParams } from "expo-router";
+import { saveSession } from "@/services/session-storage";
+import { Session } from "@/types/session";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -13,10 +15,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ReviewSessionPage() {
-  const { activity, detectedDuration } = useLocalSearchParams<{
-    activity: string;
-    detectedDuration: string;
-  }>();
+  const { activity, detectedDuration, startedAt, endedAt } =
+    useLocalSearchParams<{
+      activity: string;
+      detectedDuration: string;
+      startedAt: string;
+      endedAt: string;
+    }>();
 
   const [useDetectedDuration, setUseDetectedDuration] = useState(true);
   const [accomplishment, setAccomplishment] = useState("");
@@ -44,6 +49,32 @@ export default function ReviewSessionPage() {
   const isZeroDuration = !useDetectedDuration && actualDurationSeconds <= 0;
 
   const disableSave = isInvalidDuration || isZeroDuration;
+
+  const handleDiscardSession = async () => {
+    router.replace("/");
+  };
+
+  const handleSaveSession = async () => {
+    const session: Session = {
+      id: `${Date.now()}-${Math.random()}`,
+      activity: activity as Session["activity"],
+      startedAt: Number(startedAt),
+      endedAt: Number(endedAt),
+      detectedDuration: Number(detectedDuration),
+      actualDuration: useDetectedDuration
+        ? Number(detectedDuration)
+        : actualDurationSeconds,
+      notes: accomplishment,
+      source: "timer",
+      createdAt: Date.now(),
+    };
+
+    await saveSession(session);
+
+    console.log("Saved Session:", session);
+
+    router.replace("/sessions");
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -148,8 +179,15 @@ export default function ReviewSessionPage() {
               disableSave && styles.disabledSaveButton,
             ]}
             disabled={disableSave}
+            onPress={handleSaveSession}
           >
             <Text style={styles.saveButtonText}>Save Session</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.discardButton}
+            onPress={handleDiscardSession}
+          >
+            <Text style={styles.discardButtonText}>Discard Session</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -260,5 +298,18 @@ const styles = StyleSheet.create({
   },
   disabledSaveButton: {
     backgroundColor: "#4b5563",
+  },
+  discardButton: {
+    marginTop: 12,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ef4444",
+  },
+  discardButtonText: {
+    color: "#ef4444",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

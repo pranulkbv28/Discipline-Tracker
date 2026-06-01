@@ -36,12 +36,21 @@ export default function RootLayout() {
           options={{
             title: "Active Session",
             headerShown: false,
+            gestureEnabled: false,
           }}
         />
         <Stack.Screen
           name="review-session"
           options={{
             title: "Review Session",
+            headerShown: false,
+            gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen
+          name="manual-session"
+          options={{
+            title: "Manual Session",
             headerShown: false,
           }}
         />
